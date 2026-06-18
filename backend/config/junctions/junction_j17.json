@@ -1,0 +1,48 @@
+"""Example junction configuration"""
+
+{
+  "junction_id": "J17-N",
+  "name": "Junction 17 - North",
+  "location": {
+    "lat": 12.9716,
+    "lon": 77.5946,
+    "city": "Bangalore"
+  },
+  "geometry": {
+    "lanes": 4,
+    "total_width_m": 14.0,
+    "stop_line": [[12.9716, 77.5946], [12.9717, 77.5947]],
+    "no_parking_zones": [
+      {
+        "name": "School Zone",
+        "distance_m": 100,
+        "priority": "high"
+      }
+    ]
+  },
+  "signal_state": {
+    "cycle_seconds": 90,
+    "phases": {
+      "north_south": [
+        {"color": "GREEN", "duration": 45},
+        {"color": "AMBER", "duration": 3},
+        {"color": "RED", "duration": 42}
+      ]
+    }
+  },
+  "cameras": [
+    {
+      "camera_id": "J17-N-CAM1",
+      "type": "TRAFFIC_ENFORCEMENT",
+      "feed_url": "rtsp://camera1.local:554/stream",
+      "orientation": "north"
+    }
+  ],
+  "violations_enabled": [
+    "NO_HELMET",
+    "TRIPLE_RIDING",
+    "RED_LIGHT",
+    "STOP_LINE",
+    "ILLEGAL_PARKING"
+  ]
+}
