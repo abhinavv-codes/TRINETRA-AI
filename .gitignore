@@ -1,16 +1,52 @@
-.env
-.env.local
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.coverage
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+
+# React/Vite
 node_modules/
 dist/
 build/
-*.egg-info/
-.venv
-venv/
-.vscode/
-.idea/
+.next/
+
+# Logs
 *.log
-.DS_Store
-data/models/best.pt
 logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Databases
+*.db
+*.sqlite3
+
+# Jupyter
+.ipynb_checkpoints/
+
+# ML Models
+*.pt
+*.pth
+*.ckpt
+*.h5
+*.pkl
+
+# Python packaging
+*.egg-info/
