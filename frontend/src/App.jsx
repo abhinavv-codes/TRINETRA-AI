@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import Toaster from 'react-hot-toast/headless/toaster';
+import React from 'react';
+import { Toaster } from 'react-hot-toast';
 import './index.css';
 import Landing from './pages/Landing';
 

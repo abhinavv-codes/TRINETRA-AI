@@ -1,6 +1,24 @@
 import React, { useState, useRef } from 'react';
-import { Upload, Play, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
+
+// Simple SVG Icons
+const UploadIcon = () => (
+  <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+  </svg>
+);
+
+const PlayIcon = () => (
+  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+    <path d="M8 5v14l11-7z" />
+  </svg>
+);
+
+const AlertIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4v2m0 0v2m0-2H9m3 0h3m-3-7a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>
+);
 
 export default function Landing() {
   const [video, setVideo] = useState(null);
@@ -8,6 +26,7 @@ export default function Landing() {
   const [isLoading, setIsLoading] = useState(false);
   const [isDragActive, setIsDragActive] = useState(false);
   const fileInputRef = useRef(null);
+  const [enhancedFrames, setEnhancedFrames] = useState([]);
 
   const handleDrag = (e) => {
     e.preventDefault();
@@ -69,22 +88,36 @@ export default function Landing() {
 
     setIsLoading(true);
     try {
+      // TODO: Replace with your actual API endpoint
+      // For now, just show success after a short delay
       const formData = new FormData();
-      formData.append('video', video);
 
-      // Replace with your actual API endpoint
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
+        formData.append(
+        "video",
+        video
+        );
 
-      if (response.ok) {
-        toast.success('Video uploaded successfully!');
-        setVideo(null);
-        setVideoPreview(null);
-      } else {
-        toast.error('Failed to upload video');
-      }
+        const response = await fetch(
+        "http://localhost:8000/test-enhancement",
+        {
+            method: "POST",
+            body: formData,
+        }
+        );
+
+        const data = await response.json();
+
+        setEnhancedFrames(
+        data.frames
+        );
+
+        toast.success(
+        "Processed successfully"
+        );
+      
+      toast.success('Video uploaded successfully!');
+      setVideo(null);
+      setVideoPreview(null);
     } catch (error) {
       console.error('Upload error:', error);
       toast.error('Error uploading video');
@@ -173,9 +206,9 @@ export default function Landing() {
                   <div className={`p-4 rounded-full transition-colors ${
                     isDragActive ? 'bg-red-500/20' : 'bg-slate-700/50'
                   }`}>
-                    <Upload className={`w-12 h-12 ${
-                      isDragActive ? 'text-red-400' : 'text-slate-300'
-                    }`} />
+                    <div className={`${isDragActive ? 'text-red-400' : 'text-slate-300'}`}>
+                      <UploadIcon />
+                    </div>
                   </div>
 
                   <div>
@@ -192,7 +225,9 @@ export default function Landing() {
 
             {/* Info Box */}
             <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 flex gap-3">
-              <AlertCircle className="w-5 h-5 text-slate-400 flex-shrink-0 mt-0.5" />
+              <div className="text-slate-400 flex-shrink-0 mt-0.5">
+                <AlertIcon />
+              </div>
               <p className="text-sm text-slate-300">
                 Your video will be processed with our advanced AI model to detect traffic violations in real-time.
               </p>
@@ -221,7 +256,7 @@ export default function Landing() {
                       </>
                     ) : (
                       <>
-                        <Play className="w-5 h-5" />
+                        <PlayIcon />
                         Analyze Video
                       </>
                     )}
@@ -229,7 +264,28 @@ export default function Landing() {
                 </>
               )}
             </div>
+            
+            {enhancedFrames.length > 0 && (
+            <div className="mt-8">
+                <h3 className="text-2xl font-bold text-white mb-4">
+                First 10 Enhanced Frames
+                </h3>
 
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                {enhancedFrames.map(
+                    (frame, index) => (
+                    <img
+                        key={index}
+                        src={`data:image/jpeg;base64,${frame}`}
+                        alt={`Frame ${index}`}
+                        className="rounded-lg border border-slate-700"
+                    />
+                    )
+                )}
+                </div>
+            </div>
+            )}
+            
             {!video && (
               <button
                 onClick={() => fileInputRef.current?.click()}
