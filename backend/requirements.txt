@@ -1,34 +1,13 @@
-# Core Framework
-fastapi==0.104.1
-uvicorn[standard]==0.24.0
-pydantic==2.5.0
-pydantic-settings==2.1.0
+opencv-python
+numpy
 
-# Data Processing
-numpy>=2.0.0
-Pillow>=10.1.0
+torch
+torchvision
 
-# Database & ORM
-sqlalchemy==2.0.23
-alembic==1.13.0
-psycopg2-binary==2.9.9
-
-# Cache & Storage
-redis==5.0.1
-boto3==1.29.7
-
-# Security & Auth
-python-jose==3.3.0
-passlib==1.7.4
-python-multipart==0.0.6
-cryptography==41.0.7
-
-# Utilities
-python-dotenv==1.0.0
-requests==2.31.0
-aiofiles==23.2.1
-
-# Development & Testing
-pytest==7.4.3
-pytest-asyncio==0.21.1
-httpx==0.25.2
+einops
+lmdb
+yacs
+natsort
+scikit-image
+gdown
+pyyaml
