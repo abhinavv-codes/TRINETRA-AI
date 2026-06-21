@@ -1,13 +1,45 @@
-opencv-python
-numpy
+# ==============================================================================
+# TRINETRA AI Backend Dependencies (Freezed for Production Consistency)
+# ==============================================================================
 
-torch
-torchvision
+# Core API Gateway & ASGI Server
+fastapi==0.104.1
+uvicorn==0.24.0
+pydantic==2.5.0
+pydantic-settings==2.1.0
+anyio==3.7.1
+httpx==0.25.2
 
-einops
-lmdb
-yacs
-natsort
-scikit-image
-gdown
-pyyaml
+# Persistence & Storage
+SQLAlchemy==2.0.23
+psycopg2-binary==2.9.9
+redis==5.0.1
+python-multipart==0.0.6
+
+# Security & Authentication
+passlib==1.7.4
+bcrypt==4.1.2
+python-jose==3.3.0
+python-dotenv==1.0.0
+
+# Computer Vision & Machine Learning
+numpy==2.4.6
+opencv-python==4.13.0.92
+opencv-contrib-python==4.10.0.84
+pillow==12.2.0
+scikit-image==0.26.0
+PyYAML==6.0.2
+einops==0.8.2
+lmdb==2.2.1
+gdown==6.1.0
+
+# Deep Learning Frameworks (Custom Inference Engines)
+torch==2.12.1
+torchvision==0.27.1
+ultralytics==8.4.71
+paddlepaddle==3.3.1
+paddleocr==3.7.0
+paddlex==3.7.1
+
+# Testing
+pytest==7.4.3
