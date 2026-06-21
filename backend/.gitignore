@@ -1,11 +1,15 @@
+# =========================
+# Python
+# =========================
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
+
 build/
-develop-eggs/
 dist/
+develop-eggs/
 downloads/
 eggs/
 .eggs/
@@ -18,61 +22,36 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+
+# Virtual Environments
 venv/
 ENV/
 env/
-.venv
+.venv/
 
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# Environment
+# =========================
+# Environment Variables
+# =========================
 .env
 .env.local
+.env.*
+!.env.example
 
+# =========================
 # Database
+# =========================
 *.db
 *.sqlite
+*.sqlite3
 
+# =========================
 # Logs
+# =========================
 logs/
 *.log
 
-# Cache
+# =========================
+# Testing / Coverage
+# =========================
 .pytest_cache/
 .coverage
-
-# Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-
-# Virtual Environment
-venv/
-.env
-
-# Model Weights
-app/inference/enhancement/weights/
-
-# Test Videos
-videos/
-
-# Generated Outputs
-outputs/
-enhanced.mp4
-
-# IDE
-.vscode/
-.idea/
-
-# OS Files
-.DS_Store
-Thumbs.db
-
-# Logs
-*.log

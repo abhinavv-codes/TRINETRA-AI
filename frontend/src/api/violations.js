@@ -7,6 +7,13 @@ export const violationsAPI = {
     formData.append('camera_id', cameraId);
     return api.post('/violations/detect', formData);
   },
+
+  detectVideo: (file, cameraId = 'J17-N') => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('camera_id', cameraId);
+    return api.post('/violations/detect-video', formData);
+  },
   
   list: (skip = 0, limit = 50, filters = {}) => {
     return api.get('/violations/list', {

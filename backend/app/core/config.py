@@ -39,8 +39,8 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 30
     
     # ML Models
-    model_path: str = "backend/models/best.pt"
-    device: str = "cuda"  # or 'cpu'
+    model_path: str = "./yolov8n.pt"
+    device: str = "cpu"  # or 'cuda'
     
     # Frontend
     frontend_url: str = "http://localhost:5173"

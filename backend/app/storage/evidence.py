@@ -59,16 +59,30 @@ class EvidenceStorage:
             return uri
         
         except Exception as e:
-            logger.error(f"Failed to upload evidence: {e}")
-            raise
+            logger.warning(f"Failed to upload evidence to S3, falling back to local file storage: {e}")
+            import os
+            # Ensure key is safe
+            local_path = os.path.join("data", key)
+            os.makedirs(os.path.dirname(local_path), exist_ok=True)
+            with open(local_path, "wb") as f:
+                f.write(image_bytes)
+            
+            # Normalize to web path
+            web_key = key.replace("\\", "/")
+            uri = f"/static/{web_key}"
+            logger.info(f"Saved evidence locally at: {uri}")
+            return uri
     
     def download_evidence(self, key: str) -> bytes:
         """Download evidence image"""
-        
         try:
             response = self.s3_client.get_object(Bucket=self.bucket, Key=key)
             return response['Body'].read()
-        
         except Exception as e:
-            logger.error(f"Failed to download evidence: {e}")
-            raise
+            logger.warning(f"Failed to download from S3, trying local file: {e}")
+            import os
+            local_path = os.path.join("data", key)
+            if os.path.exists(local_path):
+                with open(local_path, "rb") as f:
+                    return f.read()
+            raise e

@@ -59,6 +59,14 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# Mount static files for local storage fallback
+os.makedirs("data", exist_ok=True)
+app.mount("/static", StaticFiles(directory="data"), name="static")
+
+# Mount evidence files for direct relative serving
+os.makedirs("evidence", exist_ok=True)
+app.mount("/evidence", StaticFiles(directory="evidence"), name="evidence")
+
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,

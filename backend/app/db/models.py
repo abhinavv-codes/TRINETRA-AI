@@ -1,8 +1,7 @@
 """SQLAlchemy ORM models"""
 
-from sqlalchemy import Column, String, Integer, Float, DateTime, Text, ARRAY, JSON, Boolean, ForeignKey
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy import Column, String, Integer, Float, DateTime, Text, JSON, Boolean, ForeignKey
+from sqlalchemy.orm import declarative_base
 from datetime import datetime
 import uuid
 
@@ -13,7 +12,7 @@ class Vehicle(Base):
     """Vehicle records"""
     __tablename__ = "vehicles"
     
-    vehicle_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    vehicle_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     plate_text = Column(String(16), index=True, nullable=False)
     vehicle_type = Column(String(50))  # car, motorcycle, bus, truck, auto
     owner_name = Column(String(200), nullable=True)
@@ -26,10 +25,10 @@ class Violation(Base):
     """Violation detection events"""
     __tablename__ = "violations"
     
-    violation_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    vehicle_id = Column(UUID(as_uuid=True), ForeignKey('vehicles.vehicle_id'), nullable=True)
+    violation_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    vehicle_id = Column(String(36), ForeignKey('vehicles.vehicle_id'), nullable=True)
     camera_id = Column(String(50), index=True, nullable=False)
-    violation_types = Column(ARRAY(String), default=[])  # e.g., ["NO_HELMET", "TRIPLE"]
+    violation_types = Column(JSON, default=list)  # e.g., ["NO_HELMET", "TRIPLE"]
     detected_at = Column(DateTime, index=True, default=datetime.utcnow, nullable=False)
     
     risk_score = Column(Integer, nullable=True)  # 0-100
@@ -40,14 +39,14 @@ class Violation(Base):
     # Context
     speed_kmph = Column(Float, nullable=True)
     ped_count = Column(Integer, default=0)
-    zones = Column(ARRAY(String), default=[])  # SCHOOL_ZONE, JUNCTION, etc.
+    zones = Column(JSON, default=list)  # SCHOOL_ZONE, JUNCTION, etc.
     traffic_density = Column(Float, default=0.5)
     
     location = Column(String(100), nullable=True)  # GeoJSON: {"lat": 12.97, "lon": 77.59}
     
     # Report and metadata
     report_text = Column(Text, nullable=True)
-    metadata_json = Column(JSONB, nullable=True)
+    metadata_json = Column(JSON, nullable=True)
     
     # Audit
     verified_by = Column(String(100), nullable=True)
@@ -59,14 +58,14 @@ class Evidence(Base):
     """Tamper-evident evidence images"""
     __tablename__ = "evidence"
     
-    evidence_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    violation_id = Column(UUID(as_uuid=True), ForeignKey('violations.violation_id'), index=True, nullable=False)
+    evidence_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    violation_id = Column(String(36), ForeignKey('violations.violation_id'), index=True, nullable=False)
     
-    image_uri = Column(String(500), nullable=False)  # S3/MinIO path
+    image_uri = Column(String(500), nullable=False)  # S3/MinIO/Local path
     sha256 = Column(String(64), nullable=False)  # Tamper-evident hash
     prev_hash = Column(String(64), nullable=True)  # Hash chain
     
-    metadata_json = Column(JSONB, nullable=True)
+    metadata_json = Column(JSON, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
 
@@ -74,7 +73,7 @@ class User(Base):
     """System users (officers, admins, auditors)"""
     __tablename__ = "users"
     
-    user_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     username = Column(String(100), unique=True, index=True, nullable=False)
     email = Column(String(100), unique=True, index=True, nullable=False)
     password_hash = Column(String(255), nullable=False)
@@ -93,7 +92,7 @@ class Hotspot(Base):
     """Aggregated violation hotspots"""
     __tablename__ = "hotspots"
     
-    hotspot_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    hotspot_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     
     location = Column(String(100), nullable=False)  # GeoJSON point
     corridor = Column(String(100), index=True)
@@ -111,10 +110,10 @@ class Analytics(Base):
     """Time-series analytics data"""
     __tablename__ = "analytics"
     
-    analytics_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    analytics_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     
     metric_type = Column(String(50), index=True)  # predicted_count, avg_risk, etc.
-    dimension = Column(JSONB)  # {location, hour, dow, violation_type}
+    dimension = Column(JSON)  # {location, hour, dow, violation_type}
     value = Column(Float, nullable=False)
     
     computed_at = Column(DateTime, default=datetime.utcnow, index=True)
@@ -124,16 +123,16 @@ class AuditLog(Base):
     """Immutable audit trail"""
     __tablename__ = "audit_log"
     
-    audit_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    audit_id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     
-    user_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id'))
+    user_id = Column(String(36), ForeignKey('users.user_id'))
     action = Column(String(100), nullable=False)  # VERIFY, REJECT, ISSUE, LOGIN, etc.
     
     resource_type = Column(String(50))  # VIOLATION, EVIDENCE, USER, etc.
     resource_id = Column(String(50))  # ID of the resource
     
-    old_value = Column(JSONB)
-    new_value = Column(JSONB)
+    old_value = Column(JSON)
+    new_value = Column(JSON)
     
     details = Column(Text)
     

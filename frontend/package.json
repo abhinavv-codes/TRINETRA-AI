@@ -1,5 +1,3 @@
-"""Frontend package.json"""
-
 {
   "name": "trinetra-frontend",
   "version": "1.0.0",

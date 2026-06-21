@@ -23,11 +23,20 @@ class YOLODetector:
                 - classes: Class names
                 - confidences: Confidence scores
         """
+        if self.model is None:
+            logger.warning("YOLO model is not loaded, returning empty detections")
+            return {
+                "boxes": np.array([]),
+                "classes": np.array([]),
+                "confidences": np.array([]),
+                "class_names": {},
+            }
+            
         results = self.model(image, conf=conf)
         detections = results[0]
         
         return {
-            "boxes": detections.boxes.xywh.cpu().numpy(),
+            "boxes": detections.boxes.xyxy.cpu().numpy(),
             "classes": detections.boxes.cls.cpu().numpy(),
             "confidences": detections.boxes.conf.cpu().numpy(),
             "class_names": detections.names,

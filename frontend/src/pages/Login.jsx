@@ -28,39 +28,43 @@ export default function Login({ onLogin }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary to-red-700 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-2xl p-8 max-w-md w-full">
+    <div className="min-h-screen bg-[#050b18] text-slate-150 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Background Glow Elements */}
+      <div className="absolute right-0 top-0 w-80 h-80 bg-cyan-600/10 rounded-full blur-3xl pointer-events-none -z-10"></div>
+      <div className="absolute left-0 bottom-0 w-80 h-80 bg-blue-600/10 rounded-full blur-3xl pointer-events-none -z-10"></div>
+
+      <div className="card p-8 max-w-md w-full border-slate-800/80 shadow-2xl relative z-10">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-primary rounded-lg flex items-center justify-center mx-auto mb-4">
-            <span className="text-white text-3xl">🎯</span>
+          <div className="w-14 h-14 bg-gradient-to-tr from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-cyan-500/20">
+            <span className="text-white text-2xl">👁️</span>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">TRINETRA</h1>
-          <p className="text-gray-600 mt-2">Traffic Violation Detection</p>
+          <h1 className="text-3xl font-extrabold tracking-tight text-white">TRINETRA <span className="text-cyan-400 font-black">AI</span></h1>
+          <p className="text-[10px] text-slate-400 font-mono uppercase tracking-widest mt-2">Traffic Violation Detection</p>
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-4">
+        <form onSubmit={handleLogin} className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-[10px] font-mono text-slate-400 uppercase mb-2 tracking-wider">
               Username
             </label>
             <input
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="w-full px-4 py-2 bg-slate-950/80 border border-slate-800 rounded-lg text-slate-200 placeholder-slate-650 focus:ring-2 focus:ring-cyan-500 focus:border-transparent font-mono text-sm"
               placeholder="demo"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-[10px] font-mono text-slate-400 uppercase mb-2 tracking-wider">
               Password
             </label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="w-full px-4 py-2 bg-slate-950/80 border border-slate-800 rounded-lg text-slate-200 placeholder-slate-650 focus:ring-2 focus:ring-cyan-500 focus:border-transparent font-mono text-sm"
               placeholder="••••••"
             />
           </div>
@@ -68,17 +72,17 @@ export default function Login({ onLogin }) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-primary text-white font-bold py-2 rounded-lg hover:bg-red-600 disabled:opacity-50 transition"
+            className="btn-primary w-full py-2.5 mt-2 text-sm font-bold uppercase tracking-wider"
           >
-            {loading ? 'Logging in...' : 'Login'}
+            {loading ? 'Authenticating...' : 'Establish Connection'}
           </button>
         </form>
 
-        <div className="mt-8 pt-8 border-t border-gray-200">
-          <p className="text-sm text-gray-600 text-center mb-4">Demo Credentials</p>
-          <div className="space-y-2 text-sm text-gray-600">
-            <p><strong>Officer:</strong> demo / demo123</p>
-            <p><strong>Admin:</strong> admin / admin123</p>
+        <div className="mt-6 pt-6 border-t border-slate-800/60 text-center font-mono text-xs">
+          <p className="text-slate-500 mb-3">System Node Access Credentials</p>
+          <div className="space-y-1.5 text-slate-400">
+            <p>Officer: <span className="text-cyan-400">demo</span> / <span className="text-slate-500">demo123</span></p>
+            <p>Administrator: <span className="text-cyan-400">admin</span> / <span className="text-slate-500">admin123</span></p>
           </div>
         </div>
       </div>
