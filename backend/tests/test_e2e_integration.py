@@ -24,15 +24,17 @@ def create_mock_video(path):
 def run_tests():
     client = TestClient(app)
     
-    # 1. Test Image Detection
-    image_path = r"C:\Users\acer\.gemini\antigravity-ide\brain\5136487d-2184-4108-835d-85d84a5d4499\traffic_motorcycle_1781883048249.png"
+    # Resolve relative path for validation test image
+    base_dir = os.path.dirname(__file__)
+    image_path = os.path.abspath(os.path.join(base_dir, "..", "..", "data", "validation", "helmet", "images.jpg"))
+    
     print(f"\n--- TESTING /api/v1/violations/detect with image {image_path} ---")
     if os.path.exists(image_path):
         with open(image_path, "rb") as f:
             file_bytes = f.read()
         response = client.post(
             "/api/v1/violations/detect",
-            files={"file": ("traffic_motorcycle.png", file_bytes, "image/png")},
+            files={"file": ("images.jpg", file_bytes, "image/jpeg")},
             data={"camera_id": "J17-N"}
         )
         print(f"Status Code: {response.status_code}")

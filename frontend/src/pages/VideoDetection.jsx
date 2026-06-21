@@ -32,7 +32,7 @@ export default function VideoDetection() {
     setActiveStep(0);
     const toastId = toast.loading("Processing traffic recording...");
 
-    // Start timer interval to cycle through active steps
+    // Cycle through steps
     const interval = setInterval(() => {
       setActiveStep((prev) => {
         if (prev < 3) return prev + 1;
@@ -54,11 +54,42 @@ export default function VideoDetection() {
   };
 
   const stepsList = [
-    "Running Vehicle Detection...",
-    "Running Helmet Detection...",
-    "Running OCR...",
-    "Generating Evidence..."
+    { title: "Stage 1/4", desc: "Vehicle Detection" },
+    { title: "Stage 2/4", desc: "Helmet Detection" },
+    { title: "Stage 3/4", desc: "License Plate OCR" },
+    { title: "Stage 4/4", desc: "Evidence Generation" }
   ];
+
+  const getPlateDisplay = (plateText, ocrConf, status) => {
+    const confidencePercent = Math.round(ocrConf * 100);
+    let barColorClass = "bg-red-500";
+    let textColorClass = "text-red-400";
+    
+    if (ocrConf >= 0.85) {
+      barColorClass = "bg-emerald-500";
+      textColorClass = "text-emerald-400";
+    } else if (ocrConf >= 0.50) {
+      barColorClass = "bg-amber-500";
+      textColorClass = "text-amber-400";
+    }
+
+    let displayPlate = "";
+    if (status === "VERIFIED") {
+      displayPlate = `Plate: ${plateText || ''}`;
+    } else if (status === "LOW_CONFIDENCE") {
+      const text = plateText || '';
+      displayPlate = `Plate: ${text.length > 2 ? text.slice(0, -2) + '**' : text + '**'}`;
+    } else {
+      displayPlate = "Plate Not Readable";
+    }
+
+    return {
+      displayPlate,
+      confidencePercent,
+      barColorClass,
+      textColorClass
+    };
+  };
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 relative">
@@ -68,39 +99,56 @@ export default function VideoDetection() {
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
           <div className="bg-slate-900 border border-slate-800 p-8 rounded-2xl max-w-md w-full text-center space-y-6 shadow-2xl">
             {/* Animated Spinner */}
-            <div className="relative w-16 h-16 mx-auto">
+            <div className="relative w-16 h-16 mx-auto flex items-center justify-center">
               <div className="absolute inset-0 border-4 border-cyan-500/20 rounded-full"></div>
               <div className="absolute inset-0 border-4 border-transparent border-t-cyan-500 rounded-full animate-spin"></div>
             </div>
             
-            <div className="space-y-2">
-              <h3 className="text-lg font-bold text-slate-100 font-mono tracking-wider">COMPUTING CCTV VIDEO ANALYTICS</h3>
-              <p className="text-[11px] text-cyan-400 font-mono animate-pulse">Processing may take 1–2 minutes on CPU.</p>
+            <div className="space-y-1">
+              <h3 className="text-lg font-bold text-slate-100 font-mono tracking-wider flex items-center justify-center gap-1.5">
+                🔍 AI Analysis In Progress
+              </h3>
+              <p className="text-xs text-slate-400 font-mono">Running CCTV neural pipelines...</p>
             </div>
 
             {/* Steps List */}
-            <div className="bg-slate-950/50 p-4 rounded-xl border border-slate-950 text-left font-mono text-xs space-y-3">
+            <div className="bg-slate-950/50 p-4 rounded-xl border border-slate-950 text-left font-mono text-xs space-y-4">
               {stepsList.map((step, idx) => {
                 const isDone = activeStep > idx;
                 const isActive = activeStep === idx;
                 return (
-                  <div key={idx} className="flex items-center justify-between">
-                    <span className={isDone ? "text-slate-500 line-through" : isActive ? "text-cyan-400 font-bold" : "text-slate-400"}>
-                      {step}
-                    </span>
-                    <span className="font-bold">
+                  <div key={idx} className="flex items-center justify-between border-b border-slate-900/40 pb-2 last:border-b-0 last:pb-0">
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-slate-500 font-bold uppercase">{step.title}</span>
+                      <span className={isDone ? "text-slate-500 line-through" : isActive ? "text-cyan-400 font-bold" : "text-slate-400"}>
+                        {step.desc}
+                      </span>
+                    </div>
+                    <span className="font-bold text-[10px] uppercase">
                       {isDone ? (
-                        <span className="text-emerald-500">✓ DONE</span>
+                        <span className="text-emerald-500">✓ Completed</span>
                       ) : isActive ? (
-                        <span className="text-cyan-400 animate-pulse">● ACTIVE</span>
+                        <span className="text-cyan-400 animate-pulse">● Processing</span>
                       ) : (
-                        <span className="text-slate-600">AWAITING</span>
+                        <span className="text-slate-655 text-slate-600">Awaiting</span>
                       )}
                     </span>
                   </div>
                 );
               })}
             </div>
+
+            {/* Progress Bar */}
+            <div className="w-full bg-slate-950/60 rounded-full h-1.5 overflow-hidden border border-slate-800">
+              <div 
+                className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 transition-all duration-1000" 
+                style={{ width: `${(activeStep + 1) * 25}%` }}
+              ></div>
+            </div>
+
+            <p className="text-[10px] text-slate-500 font-mono border-t border-slate-850 pt-4">
+              Processing may take 30–120 seconds on CPU. Please do not refresh.
+            </p>
           </div>
         </div>
       )}
@@ -122,7 +170,7 @@ export default function VideoDetection() {
             {!selectedFile ? (
               <label className={`flex flex-col items-center justify-center h-72 rounded-xl border-2 border-dashed bg-slate-950/40 transition-all duration-300 ${
                 loading 
-                  ? 'border-slate-800 cursor-not-allowed opacity-50 pointer-events-none' 
+                  ? 'border-slate-850 cursor-not-allowed opacity-50 pointer-events-none' 
                   : 'border-slate-800 hover:border-cyan-500/50 hover:bg-slate-900/20 cursor-pointer group'
               }`}>
                 <FileVideo className="w-12 h-12 text-slate-500 group-hover:text-cyan-400 transition mb-3" />
@@ -155,7 +203,7 @@ export default function VideoDetection() {
                     <button 
                       onClick={handleUpload}
                       disabled={loading}
-                      className="btn-primary flex-1"
+                      className="btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Process Footage
                     </button>
@@ -183,7 +231,7 @@ export default function VideoDetection() {
           </div>
         </div>
 
-        {/* Right Pane: Surviellance Results */}
+        {/* Right Pane: Surveillance Results */}
         <div className="lg:col-span-7 space-y-4">
           <div className="card p-6 h-full flex flex-col">
             <h2 className="text-lg font-bold text-slate-200 mb-4">Surveillance Logging</h2>
@@ -227,36 +275,55 @@ export default function VideoDetection() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-850/60 text-slate-300">
-                        {result.results?.filter(v => v.violation !== 'NONE').map((item, idx) => (
-                          <tr key={idx} className="hover:bg-slate-900/30 transition-colors">
-                            <td className="py-3 font-semibold text-slate-200 tracking-wider">
-                              {item.plate_number || 'UNKNOWN'}
-                            </td>
-                            <td className="py-3 capitalize text-slate-400">
-                              {item.vehicle_type}
-                            </td>
-                            <td className="py-3">
-                              <ViolationTag type={item.violation} size="small" />
-                            </td>
-                            <td className="py-3 text-right">
-                              <span className={`font-bold ${item.risk_score >= 80 ? 'text-red-500' : item.risk_score >= 60 ? 'text-orange-500' : 'text-amber-500'}`}>
-                                {item.risk_score}
-                              </span>
-                            </td>
-                            <td className="py-3 text-right">
-                              {item.violation_id ? (
-                                <Link 
-                                  to={`/evidence/${item.violation_id}`}
-                                  className="text-cyan-400 hover:text-cyan-300 hover:underline inline-flex items-center gap-1"
-                                >
-                                  View <LinkIcon className="w-3.5 h-3.5" />
-                                </Link>
-                              ) : (
-                                <span className="text-slate-600">-</span>
-                              )}
-                            </td>
-                          </tr>
-                        ))}
+                        {result.results?.filter(v => v.violation !== 'NONE').map((item, idx) => {
+                          const { displayPlate, confidencePercent, barColorClass, textColorClass } = getPlateDisplay(
+                            item.plate_text,
+                            item.ocr_confidence,
+                            item.plate_status
+                          );
+                          return (
+                            <tr key={idx} className="hover:bg-slate-900/30 transition-colors">
+                              <td className="py-3 pr-2">
+                                <div className="flex flex-col space-y-1">
+                                  <span className="font-bold text-slate-200 tracking-wider">
+                                    {displayPlate}
+                                  </span>
+                                  {item.ocr_confidence !== undefined && (
+                                    <div className="flex items-center gap-1.5">
+                                      <div className="w-16 bg-slate-950 rounded-full h-1 overflow-hidden">
+                                        <div className={`h-full ${barColorClass}`} style={{ width: `${confidencePercent}%` }}></div>
+                                      </div>
+                                      <span className="text-[9px] text-slate-500 font-bold">{confidencePercent}%</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="py-3 capitalize text-slate-400">
+                                {item.vehicle_type}
+                              </td>
+                              <td className="py-3">
+                                <ViolationTag type={item.violation} size="small" />
+                              </td>
+                              <td className="py-3 text-right">
+                                <span className={`font-bold ${item.risk_score >= 80 ? 'text-red-500' : item.risk_score >= 60 ? 'text-orange-500' : 'text-amber-500'}`}>
+                                  {item.risk_score}
+                                </span>
+                              </td>
+                              <td className="py-3 text-right">
+                                {item.violation_id ? (
+                                  <Link 
+                                    to={`/evidence/${item.violation_id}`}
+                                    className="text-cyan-400 hover:text-cyan-300 hover:underline inline-flex items-center gap-1"
+                                  >
+                                    View <LinkIcon className="w-3.5 h-3.5" />
+                                  </Link>
+                                ) : (
+                                  <span className="text-slate-650 text-slate-600">-</span>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
                         {result.results?.filter(v => v.violation !== 'NONE').length === 0 && (
                           <tr>
                             <td colSpan="5" className="py-8 text-center text-slate-500">

@@ -33,13 +33,13 @@ export default function Detection() {
     setActiveStep(0);
     const toastId = toast.loading("Initializing pipeline...");
 
-    // Start timer interval to cycle through active steps
+    // Cycle through steps every 7-8 seconds to show dynamic user feedback
     const interval = setInterval(() => {
       setActiveStep((prev) => {
         if (prev < 3) return prev + 1;
         return prev;
       });
-    }, 9000);
+    }, 7500);
 
     try {
       const response = await violationsAPI.detect(selectedFile);
@@ -60,11 +60,42 @@ export default function Detection() {
   };
 
   const stepsList = [
-    "Running Vehicle Detection...",
-    "Running Helmet Detection...",
-    "Running OCR...",
-    "Generating Evidence..."
+    { title: "Stage 1/4", desc: "Vehicle Detection" },
+    { title: "Stage 2/4", desc: "Helmet Detection" },
+    { title: "Stage 3/4", desc: "License Plate OCR" },
+    { title: "Stage 4/4", desc: "Evidence Generation" }
   ];
+
+  const getPlateDisplay = (plateText, ocrConf, status) => {
+    const confidencePercent = Math.round(ocrConf * 100);
+    let barColorClass = "bg-red-500";
+    let textColorClass = "text-red-400";
+    
+    if (ocrConf >= 0.85) {
+      barColorClass = "bg-emerald-500";
+      textColorClass = "text-emerald-400";
+    } else if (ocrConf >= 0.50) {
+      barColorClass = "bg-amber-500";
+      textColorClass = "text-amber-400";
+    }
+
+    let displayPlate = "";
+    if (status === "VERIFIED") {
+      displayPlate = `Plate: ${plateText || ''}`;
+    } else if (status === "LOW_CONFIDENCE") {
+      const text = plateText || '';
+      displayPlate = `Plate: ${text.length > 2 ? text.slice(0, -2) + '**' : text + '**'}`;
+    } else {
+      displayPlate = "Plate Not Readable";
+    }
+
+    return {
+      displayPlate,
+      confidencePercent,
+      barColorClass,
+      textColorClass
+    };
+  };
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 relative">
@@ -73,40 +104,57 @@ export default function Detection() {
       {loading && (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
           <div className="bg-slate-900 border border-slate-800 p-8 rounded-2xl max-w-md w-full text-center space-y-6 shadow-2xl">
-            {/* Animated Spinner */}
-            <div className="relative w-16 h-16 mx-auto">
+            {/* Animated Spinner & Progress ring */}
+            <div className="relative w-16 h-16 mx-auto flex items-center justify-center">
               <div className="absolute inset-0 border-4 border-cyan-500/20 rounded-full"></div>
               <div className="absolute inset-0 border-4 border-transparent border-t-cyan-500 rounded-full animate-spin"></div>
             </div>
             
-            <div className="space-y-2">
-              <h3 className="text-lg font-bold text-slate-100 font-mono tracking-wider">COMPUTING Surrey surveillance ANALYTICS</h3>
-              <p className="text-[11px] text-cyan-400 font-mono animate-pulse">Processing may take 1–2 minutes on CPU.</p>
+            <div className="space-y-1">
+              <h3 className="text-lg font-bold text-slate-100 font-mono tracking-wider flex items-center justify-center gap-1.5">
+                🔍 AI Analysis In Progress
+              </h3>
+              <p className="text-xs text-slate-400 font-mono">Running neural inference engines...</p>
             </div>
 
-            {/* Steps List */}
-            <div className="bg-slate-950/50 p-4 rounded-xl border border-slate-950 text-left font-mono text-xs space-y-3">
+            {/* Stages List */}
+            <div className="bg-slate-950/50 p-4 rounded-xl border border-slate-950 text-left font-mono text-xs space-y-4">
               {stepsList.map((step, idx) => {
                 const isDone = activeStep > idx;
                 const isActive = activeStep === idx;
                 return (
-                  <div key={idx} className="flex items-center justify-between">
-                    <span className={isDone ? "text-slate-500 line-through" : isActive ? "text-cyan-400 font-bold" : "text-slate-400"}>
-                      {step}
-                    </span>
-                    <span className="font-bold">
+                  <div key={idx} className="flex items-center justify-between border-b border-slate-900/40 pb-2 last:border-b-0 last:pb-0">
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-slate-500 font-bold uppercase">{step.title}</span>
+                      <span className={isDone ? "text-slate-500 line-through" : isActive ? "text-cyan-400 font-bold" : "text-slate-400"}>
+                        {step.desc}
+                      </span>
+                    </div>
+                    <span className="font-bold text-[10px] uppercase">
                       {isDone ? (
-                        <span className="text-emerald-500">✓ DONE</span>
+                        <span className="text-emerald-500">✓ Completed</span>
                       ) : isActive ? (
-                        <span className="text-cyan-400 animate-pulse">● ACTIVE</span>
+                        <span className="text-cyan-400 animate-pulse">● Processing</span>
                       ) : (
-                        <span className="text-slate-600">AWAITING</span>
+                        <span className="text-slate-650 text-slate-600">Awaiting</span>
                       )}
                     </span>
                   </div>
                 );
               })}
             </div>
+
+            {/* Progress Bar inside overlay */}
+            <div className="w-full bg-slate-950/60 rounded-full h-1.5 overflow-hidden border border-slate-800">
+              <div 
+                className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 transition-all duration-1000" 
+                style={{ width: `${(activeStep + 1) * 25}%` }}
+              ></div>
+            </div>
+
+            <p className="text-[10px] text-slate-500 font-mono border-t border-slate-850 pt-4">
+              Processing may take 30–120 seconds on CPU. Please do not refresh.
+            </p>
           </div>
         </div>
       )}
@@ -128,7 +176,7 @@ export default function Detection() {
             {!previewUrl && !result ? (
               <label className={`flex flex-col items-center justify-center h-80 rounded-xl border-2 border-dashed bg-slate-950/40 transition-all duration-300 ${
                 loading 
-                  ? 'border-slate-800 cursor-not-allowed opacity-50 pointer-events-none' 
+                  ? 'border-slate-850 cursor-not-allowed opacity-50 pointer-events-none' 
                   : 'border-slate-800 hover:border-cyan-500/50 hover:bg-slate-900/20 cursor-pointer group'
               }`}>
                 <Upload className="w-12 h-12 text-slate-500 group-hover:text-cyan-400 transition mb-3" />
@@ -157,7 +205,7 @@ export default function Detection() {
                     <button 
                       onClick={handleUpload}
                       disabled={loading}
-                      className="btn-primary flex-1"
+                      className="btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       🚀 Process Image
                     </button>
@@ -217,41 +265,73 @@ export default function Detection() {
                 {/* Detections List */}
                 <div className="space-y-3">
                   <h3 className="text-sm font-semibold text-slate-300 font-mono uppercase tracking-wider">Detected Entities</h3>
-                  <div className="space-y-2.5 max-h-[380px] overflow-y-auto pr-1">
+                  <div className="space-y-3.5 max-h-[380px] overflow-y-auto pr-1">
                     {result.results?.map((vehicle, idx) => {
                       const hasViolation = vehicle.violation && vehicle.violation !== 'NONE';
+                      const { displayPlate, confidencePercent, barColorClass, textColorClass } = getPlateDisplay(
+                        vehicle.plate_text,
+                        vehicle.ocr_confidence,
+                        vehicle.plate_status
+                      );
+                      
                       return (
                         <div 
                           key={idx}
-                          className={`p-3.5 rounded-lg border bg-slate-900/40 space-y-2 transition ${
-                            hasViolation ? 'border-red-900/30 hover:border-red-800/40' : 'border-slate-850 hover:border-slate-800'
+                          className={`p-4 rounded-xl border bg-slate-900/40 space-y-3.5 transition duration-300 ${
+                            hasViolation ? 'border-red-950/40 hover:border-red-900/30' : 'border-slate-850 hover:border-slate-800'
                           }`}
                         >
-                          <div className="flex items-start justify-between">
-                            <div>
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="space-y-2">
                               <div className="flex items-center gap-2">
-                                <span className="text-xs capitalize font-semibold px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300">
+                                <span className="text-[10px] uppercase font-mono font-semibold px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300">
                                   {vehicle.vehicle_type}
                                 </span>
-                                <span className="font-mono font-bold tracking-wider text-sm text-slate-200">
-                                  {vehicle.plate_number || 'UNKNOWN'}
+                                <span className={`text-[9px] font-bold font-mono px-2 py-0.5 rounded border ${
+                                  vehicle.plate_status === 'VERIFIED'
+                                    ? 'bg-emerald-950/30 text-emerald-400 border-emerald-900/30'
+                                    : vehicle.plate_status === 'LOW_CONFIDENCE'
+                                    ? 'bg-amber-950/30 text-amber-400 border-amber-900/30'
+                                    : 'bg-red-950/30 text-red-400 border-red-900/30'
+                                }`}>
+                                  {vehicle.plate_status}
                                 </span>
                               </div>
-                              <div className="mt-2.5 flex items-center gap-1.5 flex-wrap">
-                                {hasViolation ? (
-                                  <ViolationTag type={vehicle.violation} />
-                                ) : (
-                                  <span className="flex items-center gap-1 text-[10px] uppercase font-mono tracking-wider font-semibold text-emerald-400 px-2 py-0.5 rounded bg-emerald-950/20 border border-emerald-900/20">
-                                    <CheckCircle className="w-3 h-3" /> System Cleared
-                                  </span>
-                                )}
+                              
+                              <div className="font-mono font-bold tracking-wider text-sm text-slate-200">
+                                {displayPlate}
                               </div>
                             </div>
-                            <div className="text-right">
-                              <span className="text-[10px] font-mono text-slate-500 block">OCR Conf.</span>
-                              <span className="text-xs font-mono font-semibold text-slate-300">
-                                {Math.round(vehicle.confidence * 100)}%
+                            
+                            <div className="text-right flex flex-col items-end">
+                              <span className="text-[10px] font-mono text-slate-500 uppercase">Risk Rating</span>
+                              <span className={`text-sm font-mono font-bold mt-1 ${
+                                vehicle.risk_score >= 80 ? 'text-red-500' : vehicle.risk_score >= 60 ? 'text-orange-500' : vehicle.risk_score >= 30 ? 'text-amber-500' : 'text-emerald-400'
+                              }`}>
+                                {vehicle.risk_score} pt
                               </span>
+                            </div>
+                          </div>
+
+                          {/* Violations tags list */}
+                          <div className="flex gap-1.5 flex-wrap">
+                            {hasViolation ? (
+                              <ViolationTag type={vehicle.violation} />
+                            ) : (
+                              <span className="flex items-center gap-1 text-[10px] uppercase font-mono tracking-wider font-semibold text-emerald-400 px-2 py-0.5 rounded bg-emerald-950/20 border border-emerald-900/20">
+                                <CheckCircle className="w-3.5 h-3.5" /> System Cleared
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Confidence Indicator */}
+                          <div className="space-y-1.5 pt-2 border-t border-slate-900">
+                            <div className="flex justify-between text-[10px] font-mono text-slate-400">
+                              <span>OCR Confidence</span>
+                              <span className="font-bold text-slate-350">{confidencePercent}%</span>
+                            </div>
+                            <div className="w-full bg-slate-950 rounded-full h-1.5 overflow-hidden border border-slate-900">
+                              <div className={`h-full ${barColorClass}`} style={{ width: `${confidencePercent}%` }}></div>
                             </div>
                           </div>
                         </div>

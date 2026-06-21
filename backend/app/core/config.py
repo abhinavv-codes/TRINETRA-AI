@@ -9,9 +9,10 @@ class Settings(BaseSettings):
     """Application settings from environment variables"""
     
     model_config = {
-    "protected_namespaces": ("settings_",),
-    "env_file": ".env",
-    "case_sensitive": False,
+        "protected_namespaces": ("settings_",),
+        "env_file": ".env",
+        "case_sensitive": False,
+        "extra": "ignore",
     }
     
     # App
@@ -43,7 +44,7 @@ class Settings(BaseSettings):
     device: str = "cpu"  # or 'cuda'
     
     # Frontend
-    frontend_url: str = "http://localhost:5173"
+    frontend_url: str = "*"
     
     # Paths
     data_dir: str = "data"

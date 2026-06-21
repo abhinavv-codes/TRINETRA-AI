@@ -5,7 +5,7 @@ import { violationsAPI } from '../api/violations';
 import RiskBadge from '../components/RiskBadge';
 import ViolationTag from '../components/ViolationTag';
 import { formatDate } from '../utils/formatters';
-import { ShieldCheck, ShieldAlert, Check, X, FileText, Hash, Clock, Compass, Activity, Shield } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, Check, X, FileText, Shield } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -58,7 +58,6 @@ export default function Evidence() {
     try {
       await violationsAPI.verify(id, actionType, note);
       toast.success(`Violation ${actionType === 'VERIFY' ? 'Verified' : 'Rejected'} successfully!`, { id: toastId });
-      // Invalidate query to refresh view
       queryClient.invalidateQueries(['violation', id]);
       setNote('');
     } catch (error) {
@@ -69,19 +68,48 @@ export default function Evidence() {
     }
   };
 
-  // Generate deterministic SHA-256 string from violation ID to represent the tamper-evident hash
-  const mockSha256 = (str) => {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      const char = str.charCodeAt(i);
-      hash = (hash << 5) - hash + char;
-      hash = hash & hash;
+  const renderPlateInfo = (plateText, ocrConfidence, plateStatus) => {
+    const confidencePercent = Math.round(ocrConfidence * 100);
+    let barColorClass = "bg-red-500";
+    let textStatusColor = "text-red-400";
+    if (ocrConfidence >= 0.85) {
+      barColorClass = "bg-emerald-500";
+      textStatusColor = "text-emerald-400";
+    } else if (ocrConfidence >= 0.50) {
+      barColorClass = "bg-amber-500";
+      textStatusColor = "text-amber-400";
     }
-    const hex = Math.abs(hash).toString(16).padStart(8, '0');
-    return `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b${hex}`.slice(0, 64);
+
+    let displayedPlate = "";
+    if (plateStatus === "VERIFIED") {
+      displayedPlate = plateText || "UNKNOWN";
+    } else if (plateStatus === "LOW_CONFIDENCE") {
+      const text = plateText || "UNKNOWN";
+      displayedPlate = text.length > 2 ? text.slice(0, -2) + "**" : text + "**";
+    } else {
+      displayedPlate = "Plate Not Readable";
+    }
+
+    return {
+      displayedPlate,
+      confidencePercent,
+      barColorClass,
+      textStatusColor
+    };
   };
 
-  const evidenceHash = mockSha256(id);
+  // Resolve plate information
+  const plateTextVal = violation.plate_text || (violation.vehicle_plate !== 'UNKNOWN' ? violation.vehicle_plate : "");
+  const ocrConfVal = violation.ocr_confidence || (violation.factors?.ocr_confidence) || 0.0;
+  const plateStatusVal = violation.plate_status || (violation.factors?.plate_status) || "NOT_READABLE";
+
+  const { displayedPlate, confidencePercent, barColorClass, textStatusColor } = renderPlateInfo(
+    plateTextVal,
+    ocrConfVal,
+    plateStatusVal
+  );
+
+  const evidenceHash = violation.sha256 || violation.evidence_hash || "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
@@ -149,11 +177,15 @@ export default function Evidence() {
             <div className="grid grid-cols-2 gap-4 font-mono text-xs text-slate-350">
               <div className="p-3 bg-slate-950/50 rounded-lg border border-slate-900">
                 <span className="text-slate-500 text-[10px] block uppercase mb-1">Plate Number</span>
-                <span className="text-slate-200 font-extrabold text-sm tracking-wider">{violation.vehicle_plate || 'UNKNOWN'}</span>
+                <span className="text-slate-200 font-extrabold text-sm tracking-wider">{displayedPlate}</span>
               </div>
               <div className="p-3 bg-slate-950/50 rounded-lg border border-slate-900">
-                <span className="text-slate-500 text-[10px] block uppercase mb-1">Camera Sensor</span>
-                <span className="text-slate-200 font-bold">{violation.camera_id}</span>
+                <span className="text-slate-500 text-[10px] block uppercase mb-1">Vehicle Type</span>
+                <span className="text-slate-200 font-bold capitalize">{violation.vehicle_type || 'motorcycle'}</span>
+              </div>
+              <div className="p-3 bg-slate-950/50 rounded-lg border border-slate-900">
+                <span className="text-slate-500 text-[10px] block uppercase mb-1">Plate Status</span>
+                <span className={`font-bold ${textStatusColor}`}>{plateStatusVal}</span>
               </div>
               <div className="p-3 bg-slate-950/50 rounded-lg border border-slate-900">
                 <span className="text-slate-500 text-[10px] block uppercase mb-1">Risk Assessment</span>
@@ -162,8 +194,23 @@ export default function Evidence() {
                 </div>
               </div>
               <div className="p-3 bg-slate-950/50 rounded-lg border border-slate-900">
+                <span className="text-slate-500 text-[10px] block uppercase mb-1">Camera Sensor</span>
+                <span className="text-slate-200 font-bold">{violation.camera_id}</span>
+              </div>
+              <div className="p-3 bg-slate-950/50 rounded-lg border border-slate-900">
                 <span className="text-slate-500 text-[10px] block uppercase mb-1">Capture Time</span>
                 <span className="text-slate-350 text-[10px]">{formatDate(violation.timestamp)}</span>
+              </div>
+            </div>
+
+            {/* OCR Confidence Progress Bar */}
+            <div className="p-3.5 bg-slate-950/50 rounded-lg border border-slate-900 space-y-1.5 font-mono text-xs">
+              <div className="flex justify-between text-[10px] text-slate-400">
+                <span>OCR Confidence</span>
+                <span className="font-bold text-slate-350">{confidencePercent}%</span>
+              </div>
+              <div className="w-full bg-slate-950 rounded-full h-1.5 overflow-hidden border border-slate-800">
+                <div className={`h-full ${barColorClass}`} style={{ width: `${confidencePercent}%` }}></div>
               </div>
             </div>
 

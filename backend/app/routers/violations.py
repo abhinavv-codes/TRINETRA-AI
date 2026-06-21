@@ -798,14 +798,21 @@ async def detect_video(
                     crop = extract_plate_crop(v['box'], preprocessed_frame, dets, all_v_boxes)
                     plate_text, ocr_conf, orig_ocr_conf, enh_ocr_conf = process_ocr_with_hybrid_enhancement(crop, ocr_reader)
                     
-                    v['plate'] = parse_plate(plate_text)
-                    v['plate_confidence'] = ocr_conf
+                    final_plate, final_conf, plate_status = process_ocr_result(plate_text, ocr_conf)
+                    v['plate'] = final_plate or "UNKNOWN"
+                    v['plate_confidence'] = final_conf
+                    v['plate_text'] = final_plate
+                    v['ocr_confidence'] = final_conf
+                    v['plate_status'] = plate_status
                         
                     risk_score, risk_band, factors = risk_engine.compute_risk_score(v['violations'], context)
                     v['risk_score'] = risk_score
                     v['risk_band'] = risk_band
                     factors['orig_ocr_confidence'] = orig_ocr_conf
                     factors['enhanced_ocr_confidence'] = enh_ocr_conf
+                    factors['plate_text'] = final_plate
+                    factors['ocr_confidence'] = final_conf
+                    factors['plate_status'] = plate_status
                     if 'triple_riding_info' in v:
                         factors['rider_count'] = v['triple_riding_info']['rider_count']
                         factors['associated_person_boxes'] = v['triple_riding_info']['associated_person_boxes']
@@ -1020,14 +1027,21 @@ async def process_live_stream(
                 crop = extract_plate_crop(v['box'], preprocessed_frame, dets, all_v_boxes)
                 plate_text, ocr_conf, orig_ocr_conf, enh_ocr_conf = process_ocr_with_hybrid_enhancement(crop, ocr_reader)
                 
-                v['plate'] = parse_plate(plate_text)
-                v['plate_confidence'] = ocr_conf
+                final_plate, final_conf, plate_status = process_ocr_result(plate_text, ocr_conf)
+                v['plate'] = final_plate or "UNKNOWN"
+                v['plate_confidence'] = final_conf
+                v['plate_text'] = final_plate
+                v['ocr_confidence'] = final_conf
+                v['plate_status'] = plate_status
                     
                 risk_score, risk_band, factors = risk_engine.compute_risk_score(v['violations'], context)
                 v['risk_score'] = risk_score
                 v['risk_band'] = risk_band
                 factors['orig_ocr_confidence'] = orig_ocr_conf
                 factors['enhanced_ocr_confidence'] = enh_ocr_conf
+                factors['plate_text'] = final_plate
+                factors['ocr_confidence'] = final_conf
+                factors['plate_status'] = plate_status
                 if 'triple_riding_info' in v:
                     factors['rider_count'] = v['triple_riding_info']['rider_count']
                     factors['associated_person_boxes'] = v['triple_riding_info']['associated_person_boxes']
@@ -1234,14 +1248,22 @@ async def get_violation(violation_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Violation not found or not supported")
         
     plate = "UNKNOWN"
+    vehicle_type = "motorcycle"
     if v.vehicle_id:
         vehicle = db.query(Vehicle).filter(Vehicle.vehicle_id == v.vehicle_id).first()
         if vehicle:
             plate = vehicle.plate_text
+            vehicle_type = vehicle.vehicle_type or "motorcycle"
             
     # Get evidence URI
     evidence = db.query(Evidence).filter(Evidence.violation_id == v.violation_id).first()
     evidence_uri = evidence.image_uri if evidence else None
+    sha256 = evidence.sha256 if evidence else None
+    
+    metadata = v.metadata_json or {}
+    plate_text = metadata.get('plate_text', plate if plate != "UNKNOWN" else "")
+    ocr_confidence = metadata.get('ocr_confidence', 0.0)
+    plate_status = metadata.get('plate_status', "NOT_READABLE")
     
     return {
         "violation_id": str(v.violation_id),
@@ -1254,7 +1276,12 @@ async def get_violation(violation_id: str, db: Session = Depends(get_db)):
         "status": v.status,
         "evidence_uri": evidence_uri,
         "report": v.report_text,
-        "factors": v.metadata_json
+        "factors": metadata,
+        "plate_text": plate_text,
+        "ocr_confidence": ocr_confidence,
+        "plate_status": plate_status,
+        "vehicle_type": vehicle_type,
+        "sha256": sha256
     }
 
 
