@@ -22,7 +22,7 @@ _ocr_model = None
 
 def load_models():
     """Load all AI models at startup"""
-    global _yolo_model, _helmet_model, _plate_model, _ocr_model
+    global _yolo_model, _helmet_model, _plate_model
     from ultralytics import YOLO
     
     # 1. Load General YOLO (yolov8n.pt)
@@ -57,16 +57,6 @@ def load_models():
             logger.info("✅ Plate Detector loaded")
     except Exception as e:
         logger.error(f"Failed to load Plate Detector: {e}")
-    
-    # 4. Load OCR
-    try:
-        if _ocr_model is None:
-            from paddleocr import PaddleOCR
-            logger.info("Loading PaddleOCR")
-            _ocr_model = PaddleOCR(use_textline_orientation=True, lang='en')
-            logger.info("✅ PaddleOCR loaded")
-    except Exception as e:
-        logger.error(f"Failed to load OCR: {e}")
 
 
 def get_yolo_model():
@@ -102,7 +92,13 @@ def get_ocr_model():
     """Get OCR model instance"""
     global _ocr_model
     if _ocr_model is None:
-        load_models()
+        try:
+            from paddleocr import PaddleOCR
+            logger.info("Loading PaddleOCR (lazy initialization)...")
+            _ocr_model = PaddleOCR(use_textline_orientation=True, lang='en')
+            logger.info("✅ PaddleOCR loaded")
+        except Exception as e:
+            logger.error(f"Failed to load OCR: {e}")
     return _ocr_model
 
 

@@ -7,7 +7,7 @@ from app.db.models import Base
 
 # Create engine (with SQLite-specific settings if needed)
 engine_kwargs = {
-    "echo": settings.debug,
+    "echo": False,
     "pool_pre_ping": True,
 }
 

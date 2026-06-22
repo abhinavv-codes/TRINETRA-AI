@@ -10,12 +10,25 @@ from contextlib import asynccontextmanager
 import logging
 import os
 
+import warnings
+# Suppress Pydantic namespace conflict warnings (from models with conflicting prefixes)
+warnings.filterwarnings("ignore", message=".*protected namespace.*")
+warnings.filterwarnings("ignore", message=".*model_kwargs.*")
+# Suppress requests version dependency version mismatch warnings
+warnings.filterwarnings("ignore", message=".*urllib3.*")
+# Suppress passlib bcrypt version incompatibility warnings
+warnings.filterwarnings("ignore", category=UserWarning, module="passlib")
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+# Suppress excessive SQLAlchemy queries and other verbose engines logs
+logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
+logging.getLogger("ppocr").setLevel(logging.WARNING)
 
 # Import routers and services
 from app.routers import violations, analytics, auth, health
@@ -68,14 +81,21 @@ os.makedirs("evidence", exist_ok=True)
 app.mount("/evidence", StaticFiles(directory="evidence"), name="evidence")
 
 # CORS middleware
+origins = [
+    "http://localhost:5173",      # Vite dev server
+    "http://localhost:3000",      # Alternative frontend
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:3000",
+]
+if settings.frontend_url and settings.frontend_url not in origins:
+    if settings.frontend_url == "*":
+        origins = ["*"]
+    else:
+        origins.append(settings.frontend_url)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",      # Vite dev server
-        "http://localhost:3000",      # Alternative frontend
-        "http://127.0.0.1:5173",
-        "http://127.0.0.1:3000",
-    ],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
