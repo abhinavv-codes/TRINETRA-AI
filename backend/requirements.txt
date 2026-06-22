@@ -13,6 +13,8 @@ httpx==0.25.2
 # Persistence & Storage
 SQLAlchemy==2.0.23
 psycopg2-binary==2.9.9
+pymysql==1.2.0
+cryptography==41.0.7
 redis==5.0.1
 python-multipart==0.0.6
 

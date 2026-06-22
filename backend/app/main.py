@@ -87,11 +87,12 @@ origins = [
     "http://127.0.0.1:5173",
     "http://127.0.0.1:3000",
 ]
-if settings.frontend_url and settings.frontend_url not in origins:
-    if settings.frontend_url == "*":
+if settings.frontend_url:
+    clean_url = settings.frontend_url.rstrip("/")
+    if clean_url == "*":
         origins = ["*"]
-    else:
-        origins.append(settings.frontend_url)
+    elif clean_url not in origins:
+        origins.append(clean_url)
 
 app.add_middleware(
     CORSMiddleware,
