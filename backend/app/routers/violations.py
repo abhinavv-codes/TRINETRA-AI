@@ -208,6 +208,10 @@ def process_ocr_with_hybrid_enhancement(crop: np.ndarray, ocr_reader: OCRReader)
     if crop is None or crop.size == 0:
         return "", 0.0, 0.0, None
 
+    # OCR disabled on Render Free Tier
+    if ocr_reader is None or getattr(ocr_reader, "model", None) is None:
+        return "", 0.0, 0.0, None
+
     # Step 1: Run PaddleOCR first on the original plate crop
     orig_ocr_crop = preprocess_crop_for_ocr(crop)
     orig_text, orig_conf = ocr_reader.read_plate(orig_ocr_crop)
@@ -438,7 +442,7 @@ async def detect_violation(
 
         # Retrieve models
         ocr_model = get_ocr_model()
-        ocr_reader = OCRReader(ocr_model)
+ocr_reader = OCRReader(ocr_model) if ocr_model else None
 
         filename = file.filename.lower()
         
