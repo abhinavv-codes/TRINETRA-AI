@@ -48,5 +48,11 @@ Thumbs.db
 *.h5
 *.pkl
 
+# Allow deployment model weights
+!backend/models/
+!backend/models/*.pt
+
 # Python packaging
 *.egg-info/
+
+.env.production
