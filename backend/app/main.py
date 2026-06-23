@@ -33,21 +33,14 @@ logging.getLogger("ppocr").setLevel(logging.WARNING)
 # Import routers and services
 from app.routers import violations, analytics, auth, health
 from app.core.config import settings
-from app.inference.model_loader import load_models
 from app.db.session import init_db
 
 
-# Lifespan: load models at startup
+# Lifespan context manager
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
     logger.info("🚀 Starting TRINETRA AI Backend...")
-    logger.info("Loading AI models...")
-    try:
-        load_models()
-        logger.info("✅ Models loaded successfully")
-    except Exception as e:
-        logger.error(f"❌ Failed to load models: {e}")
     
     try:
         init_db()
