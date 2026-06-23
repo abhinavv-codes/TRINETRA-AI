@@ -28,7 +28,7 @@ requests==2.31.0
 
 # Computer Vision & Machine Learning
 numpy==1.26.4
-opencv-python==4.13.0.92
+opencv-python==4.10.0.84
 opencv-contrib-python==4.10.0.84
 pillow==12.2.0
 scikit-image==0.26.0
