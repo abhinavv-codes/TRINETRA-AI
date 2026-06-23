@@ -442,7 +442,7 @@ async def detect_violation(
 
         # Retrieve models
         ocr_model = get_ocr_model()
-ocr_reader = OCRReader(ocr_model) if ocr_model else None
+        ocr_reader = OCRReader(ocr_model) if ocr_model else None
 
         filename = file.filename.lower()
         
