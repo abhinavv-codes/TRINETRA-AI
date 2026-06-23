@@ -89,17 +89,7 @@ def get_plate_model():
 
 
 def get_ocr_model():
-    """Get OCR model instance"""
-    global _ocr_model
-    if _ocr_model is None:
-        try:
-            from paddleocr import PaddleOCR
-            logger.info("Loading PaddleOCR (lazy initialization)...")
-            _ocr_model = PaddleOCR(use_textline_orientation=True, lang='en')
-            logger.info("✅ PaddleOCR loaded")
-        except Exception as e:
-            logger.error(f"Failed to load OCR: {e}")
-    return _ocr_model
+    return None
 
 
 def get_seatbelt_model():

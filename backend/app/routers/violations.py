@@ -765,7 +765,7 @@ async def detect_video(
         frame_interval = max(1, int(fps))  # Process 1 frame per second
         
         ocr_model = get_ocr_model()
-        ocr_reader = OCRReader(ocr_model)
+        ocr_reader = OCRReader(ocr_model) if ocr_model else None
         
         frame_count = 0
         processed_count = 0
@@ -993,7 +993,7 @@ async def process_live_stream(
         }
         
     ocr_model = get_ocr_model()
-    ocr_reader = OCRReader(ocr_model)
+    ocr_reader = OCRReader(ocr_model) if ocr_model else None
     
     start_time = time.time()
     
